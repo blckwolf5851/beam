@@ -82,12 +82,12 @@ type operationResults struct {
 }
 
 type dicomStoreClient interface {
-	readStudiesMetadata(parent, dicomWebPath string) (*http.Response, error)
-	readSeriesMetadata(parent, dicomWebPath string) (*http.Response, error)
-	readInstancesMetadata(parent, dicomWebPath string) (*http.Response, error)
-	readStudy(parent, dicomWebPath string) (*http.Response, error)
-	readSeries(parent, dicomWebPath string) (*http.Response, error)
-	readInstance(parent, dicomWebPath string) (*http.Response, error)
+	readStudiesMetadata(parent, dicomWebPath []byte) (*http.Response, error)
+	readSeriesMetadata(parent, dicomWebPath []byte) (*http.Response, error)
+	readInstancesMetadata(parent, dicomWebPath []byte) (*http.Response, error)
+	readStudy(parent, dicomWebPath []byte) (*http.Response, error)
+	readSeries(parent, dicomWebPath []byte) (*http.Response, error)
+	readInstance(parent, dicomWebPath []byte) (*http.Response, error)
 	searchStudies(parent, dicomWebPath string, queries map[string]string) (*http.Response, error)
 	searchSeries(parent, dicomWebPath string, queries map[string]string) (*http.Response, error)
 	searchInstances(parent, dicomWebPath string, queries map[string]string) (*http.Response, error)
@@ -116,54 +116,44 @@ func (c *dicomStoreClientImpl) dicomStoreService() *healthcare.ProjectsLocations
 // Returns instance associated with the given study presented as metadata with the bulk data removed.
 //   - parent: projects/{project_id}/locations/{location_id}/datasets/{dataset_id}/dicomStores/{dicom_store_id}
 //   - dicomWebPath: /studies/{study_uid}/metadata
-func (c *dicomStoreClientImpl) readStudiesMetadata(parent, dicomWebPath string) (*http.Response, error) {
-	return c.dicomStoreService().Studies.RetrieveMetadata(parent, dicomWebPath).Do()
+func (c *dicomStoreClientImpl) readStudiesMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
+	return c.dicomStoreService().Studies.RetrieveMetadata(string(parent), string(dicomWebPath)).Do()
 }
 
 // Returns instance associated with the given study&series presented as metadata with the bulk data removed.
 //   - parent: projects/{project_id}/locations/{location_id}/datasets/{dataset_id}/dicomStores/{dicom_store_id}
 //   - dicomWebPath: /studies/{study_uid}/series/{series_uid}/metadata
-func (c *dicomStoreClientImpl) readSeriesMetadata(parent, dicomWebPath string) (*http.Response, error) {
-	return c.dicomStoreService().Studies.Series.RetrieveMetadata(parent, dicomWebPath).Do()
+func (c *dicomStoreClientImpl) readSeriesMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
+	return c.dicomStoreService().Studies.Series.RetrieveMetadata(string(parent), string(dicomWebPath)).Do()
 }
 
 // Returns instance associated with the given study&serie&instances presented as metadata with the bulk data removed.
 //   - parent: projects/{project_id}/locations/{location_id}/datasets/{dataset_id}/dicomStores/{dicom_store_id}
 //   - dicomWebPath: studies/{study_uid}/series/{series_uid}/instances/{instance_uid}/metadata
-func (c *dicomStoreClientImpl) readInstancesMetadata(parent, dicomWebPath string) (*http.Response, error) {
-	return c.dicomStoreService().Studies.Series.Instances.RetrieveMetadata(parent, dicomWebPath).Do()
+func (c *dicomStoreClientImpl) readInstancesMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
+	return c.dicomStoreService().Studies.Series.Instances.RetrieveMetadata(string(parent), string(dicomWebPath)).Do()
 }
 
 // Returns all instances within the given study.
 //   - parent: projects/{project_id}/locations/{location_id}/datasets/{dataset_id}/dicomStores/{dicom_store_id}
 //   - dicomWebPath: /studies/{study_uid}
-func (c *dicomStoreClientImpl) readStudy(parent, dicomWebPath string) (*http.Response, error) {
-	return c.dicomStoreService().Studies.RetrieveStudy(parent, dicomWebPath).Do()
+func (c *dicomStoreClientImpl) readStudy(parent, dicomWebPath []byte) (*http.Response, error) {
+	return c.dicomStoreService().Studies.RetrieveStudy(string(parent), string(dicomWebPath)).Do()
 }
 
 // Returns all instances within the given study and series.
 //   - parent: projects/{project_id}/locations/{location_id}/datasets/{dataset_id}/dicomStores/{dicom_store_id}
 //   - dicomWebPath: /studies/{study_uid}/series/{series_uid}
-func (c *dicomStoreClientImpl) readSeries(parent, dicomWebPath string) (*http.Response, error) {
-	return c.dicomStoreService().Studies.Series.RetrieveSeries(parent, dicomWebPath).Do()
+func (c *dicomStoreClientImpl) readSeries(parent, dicomWebPath []byte) (*http.Response, error) {
+	return c.dicomStoreService().Studies.Series.RetrieveSeries(string(parent), string(dicomWebPath)).Do()
 }
 
 // Returns instance associated with the given study, series, and SOP Instance UID
 //   - parent: projects/{project_id}/locations/{location_id}/datasets/{dataset_id}/dicomStores/{dicom_store_id}
 //   - dicomWebPath: studies/{study_uid}/series/{series_uid}/instances/{instance_uid}
-func (c *dicomStoreClientImpl) readInstance(parent, dicomWebPath string) (*http.Response, error) {
-	return c.dicomStoreService().Studies.Series.Instances.RetrieveInstance(parent, dicomWebPath).Do()
+func (c *dicomStoreClientImpl) readInstance(parent, dicomWebPath []byte) (*http.Response, error) {
+	return c.dicomStoreService().Studies.Series.Instances.RetrieveInstance(string(parent), string(dicomWebPath)).Do()
 }
-
-// // List all Dicom stores under specific parent resource
-// //   - parent: projects/%s/locations/%s/datasets/%s
-// func (c *dicomStoreClientImpl) listResources(parent string) ([]*healthcare.DicomStore, error) {
-// 	resp, err := c.dicomStoreService().List(parent).Do()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return resp.DicomStores, nil
-// }
 
 // Construct list of query parameters from string-string map
 func constructQueryParameters(queries map[string]string) []googleapi.CallOption {
