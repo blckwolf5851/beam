@@ -23,14 +23,17 @@ darwin_install_pip3_packages() {
 }
 
 install_go_packages(){
-        echo "Installing goavro"
-        go get github.com/linkedin/goavro
         # As we are using bash, we are assuming .bashrc exists.
+        prevDir=${PWD}
         grep -qxF "export GOPATH=${PWD}/sdks/go/examples/.gogradle/project_gopath" ~/.bashrc
         gopathExists=$?
         if [ $gopathExists -ne 0 ]; then
             export GOPATH=${PWD}/sdks/go/examples/.gogradle/project_gopath && echo "GOPATH was set for this session to '$GOPATH'. Make sure to add this path to your ~/.bashrc file after the execution of this script."
         fi
+        echo "Installing goavro"
+        cd sdks
+        go get github.com/linkedin/goavro
+        cd ${prevDir}
 }
 
 kernelname=$(uname -s)
@@ -38,10 +41,11 @@ kernelname=$(uname -s)
 # Running on Linux
 if [ "$kernelname" = "Linux" ]; then
     # Assuming Debian based Linux and the prerequisites in https://beam.apache.org/contribute/ are met:
-    apt-get update
+    sudo apt-get update
 
     echo "Installing dependencies listed in pkglist file"
-    apt-get install -y $(grep -v '^#' dev-support/docker/pkglist | cat) # pulling dependencies from pkglist file
+    grep -v '^#' dev-support/docker/pkglist > /tmp/pkglist
+    sudo apt-get install -y < /tmp/pkglist # pulling dependencies from pkglist file
 
     type -P python3 > /dev/null 2>&1
     python3Exists=$?
@@ -56,11 +60,12 @@ if [ "$kernelname" = "Linux" ]; then
     fi
 
     for ver in 3.7 3.8 3.9 3.10 3; do
-        apt install --yes python$ver-venv
+        sudo  apt install --yes python$ver-venv
     done
 
     type -P go > /dev/null 2>&1
     goExists=$?
+    echo $goExists
     if [ $goExists -eq 0 ]; then
         install_go_packages
     else
