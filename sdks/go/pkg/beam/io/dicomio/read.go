@@ -25,7 +25,6 @@ import (
 	"github.com/apache/beam/sdks/v2/go/pkg/beam"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/internal/errors"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/register"
-	"golang.org/x/exp/slices"
 )
 
 type ResourceScope string
@@ -45,9 +44,8 @@ func init() {
 
 /* Read Dicom files Fn*/
 type ReadDicomQuery struct {
-	parent        []byte
-	dicomWebPath  []byte
-	resourceScope ResourceScope `default:"none"`
+	parent       []byte
+	dicomWebPath []byte
 }
 
 type readDicomFn struct {
@@ -64,19 +62,7 @@ func (fn *readDicomFn) Setup() {
 
 func (fn *readDicomFn) ProcessElement(ctx context.Context, query ReadDicomQuery, emitResource, emitDeadLetter func(string)) {
 	response, err := executeAndRecordLatency(ctx, &fn.latencyMs, func() (*http.Response, error) {
-		expectedResourceScopes := []ResourceScope{ResourceScopeStudies, ResourceScopeSeries, ResourceScopeInstances}
-		if !slices.Contains(expectedResourceScopes, query.resourceScope) {
-			query.resourceScope = inferResourceScope(string(query.dicomWebPath))
-		}
-		switch query.resourceScope {
-		case ResourceScopeStudies:
-			return fn.client.readStudy(query.parent, query.dicomWebPath)
-		case ResourceScopeSeries:
-			return fn.client.readSeries(query.parent, query.dicomWebPath)
-		case ResourceScopeInstances:
-			return fn.client.readInstance(query.parent, query.dicomWebPath)
-		}
-		return nil, errors.Errorf("Invalid resource scope [%v], expected one of [resourceScopeStudies, resourceScopeSeries, resourceScopeInstances]", query.resourceScope)
+		return fn.client.readStudy(query.parent, query.dicomWebPath)
 	})
 	if err != nil {
 		fn.resourcesErrorCount.Inc(ctx, 1)
@@ -114,9 +100,8 @@ func readDicom(s beam.Scope, readDicomQueries beam.PCollection, client dicomStor
 
 /* Read Dicom metadata Fn*/
 type ReadDicomMetadataQuery struct {
-	parent        []byte
-	dicomWebPath  []byte
-	resourceScope ResourceScope `default:"none"`
+	parent       []byte
+	dicomWebPath []byte
 }
 type readDicomMetadataFn struct {
 	fnCommonVariables
@@ -132,19 +117,7 @@ func (fn *readDicomMetadataFn) Setup() {
 
 func (fn *readDicomMetadataFn) ProcessElement(ctx context.Context, query ReadDicomMetadataQuery, emitResource, emitDeadLetter func(string)) {
 	response, err := executeAndRecordLatency(ctx, &fn.latencyMs, func() (*http.Response, error) {
-		expectedResourceScopes := []ResourceScope{ResourceScopeStudies, ResourceScopeSeries, ResourceScopeInstances}
-		if !slices.Contains(expectedResourceScopes, query.resourceScope) {
-			query.resourceScope = inferResourceScope(string(query.dicomWebPath))
-		}
-		switch query.resourceScope {
-		case ResourceScopeStudies:
-			return fn.client.readStudyMetadata(query.parent, query.dicomWebPath)
-		case ResourceScopeSeries:
-			return fn.client.readSeriesMetadata(query.parent, query.dicomWebPath)
-		case ResourceScopeInstances:
-			return fn.client.readInstanceMetadata(query.parent, query.dicomWebPath)
-		}
-		return nil, errors.Errorf("Invalid resource scope [%v], expected one of [resourceScopeStudies, resourceScopeSeries, resourceScopeInstances]", query.resourceScope)
+		return fn.client.readStudyMetadata(query.parent, query.dicomWebPath)
 	})
 	if err != nil {
 		fn.resourcesErrorCount.Inc(ctx, 1)
