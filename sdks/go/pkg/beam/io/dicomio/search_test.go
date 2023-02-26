@@ -57,7 +57,7 @@ func TestSearch_Errors(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			p, s, testSearchQueryPCollection := ptest.CreateList([]SearchDicomQuery{{}})
-			resources, failedSearches := searchStudies(s, "parent", "dicomWebPath", testSearchQueryPCollection, testCase.client)
+			resources, failedSearches := searchStudies(s, testSearchQueryPCollection, testCase.client)
 			passert.Empty(s, resources)
 			passert.Count(s, failedSearches, "", 1)
 			passert.True(s, failedSearches, func(errorMsg string) bool {

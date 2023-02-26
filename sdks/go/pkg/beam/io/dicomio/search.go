@@ -39,6 +39,9 @@ type SearchDicomQuery struct {
 	// An identifier for the query, if there is source information to propagate
 	// through the pipeline.
 	Identifier string
+	// Path to DICOM store where search will be performed.
+	Parent       string
+	DicomWebPath string
 	// Query parameters for a DICOM search request as per https://www.hl7.org/dicom/search.html.
 	Parameters map[string]string
 }
@@ -50,9 +53,6 @@ type responseLinkFields struct {
 
 type searchStudiesFn struct {
 	fnCommonVariables
-	// Path to DICOM store where search will be performed.
-	Parent       string
-	DicomWebPath string
 }
 
 func (fn searchStudiesFn) String() string {
@@ -65,7 +65,7 @@ func (fn *searchStudiesFn) Setup() {
 
 func (fn *searchStudiesFn) ProcessElement(ctx context.Context, query SearchDicomQuery, emitFoundResources func(string, string), emitDeadLetter func(string)) {
 	response, err := executeAndRecordLatency(ctx, &fn.latencyMs, func() (*http.Response, error) {
-		return fn.client.searchStudies(fn.Parent, fn.DicomWebPath, query.Parameters)
+		return fn.client.searchStudies(query.Parent, query.DicomWebPath, query.Parameters)
 	})
 	if err != nil {
 		fn.resourcesErrorCount.Inc(ctx, 1)
@@ -76,7 +76,7 @@ func (fn *searchStudiesFn) ProcessElement(ctx context.Context, query SearchDicom
 	body, err := extractBodyFrom(response)
 	if err != nil {
 		fn.resourcesErrorCount.Inc(ctx, 1)
-		emitDeadLetter(errors.Wrapf(err, "could not extract body from search study resource [%v, %v] response", fn.Parent, fn.DicomWebPath).Error())
+		emitDeadLetter(errors.Wrapf(err, "could not extract body from search study resource [%v, %v] response", query.Parent, query.DicomWebPath).Error())
 		return
 	}
 
@@ -92,12 +92,12 @@ func (fn *searchStudiesFn) ProcessElement(ctx context.Context, query SearchDicom
 // PCollection is a dead-letter for the input queries that caused errors when
 // performing the search.
 // See: https://cloud.google.com/healthcare-api/docs/how-tos/dicom-search
-func SearchStudies(s beam.Scope, parent, dicomWebPath string, searchQueries beam.PCollection) (beam.PCollection, beam.PCollection) {
+func SearchStudies(s beam.Scope, searchQueries beam.PCollection) (beam.PCollection, beam.PCollection) {
 	s = s.Scope("dicomio.Search")
-	return searchStudies(s, parent, dicomWebPath, searchQueries, nil)
+	return searchStudies(s, searchQueries, nil)
 }
 
 // This is useful as an entry point for testing because we can provide a fake DICOM store client.
-func searchStudies(s beam.Scope, parent, dicomWebPath string, searchQueries beam.PCollection, client dicomStoreClient) (beam.PCollection, beam.PCollection) {
-	return beam.ParDo2(s, &searchStudiesFn{fnCommonVariables: fnCommonVariables{client: client}, Parent: parent, DicomWebPath: dicomWebPath}, searchQueries)
+func searchStudies(s beam.Scope, searchQueries beam.PCollection, client dicomStoreClient) (beam.PCollection, beam.PCollection) {
+	return beam.ParDo2(s, &searchStudiesFn{fnCommonVariables: fnCommonVariables{client: client}}, searchQueries)
 }
