@@ -47,7 +47,7 @@ func TestReadDicom(t *testing.T) {
 			containedError: fakeBodyReaderErrorMessage,
 		},
 	}
-	testReadDicomQueries := []ReadDicomQuery{ReadDicomQuery{parent: []byte("parent"), dicomWebPath: []byte("dicomWebPath")}}
+	testReadDicomQueries := []ReadDicomQuery{{Parent: []byte("parent"), DicomWebPath: []byte("dicomWebPath")}}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			p, s, resourcePaths := ptest.CreateList(testReadDicomQueries)
@@ -86,7 +86,7 @@ func TestReadDicomMetadata(t *testing.T) {
 			containedError: fakeBodyReaderErrorMessage,
 		},
 	}
-	testReadDicomMetadataQueries := []ReadDicomMetadataQuery{ReadDicomMetadataQuery{parent: []byte("parent"), dicomWebPath: []byte("dicomWebPath")}}
+	testReadDicomMetadataQueries := []ReadDicomMetadataQuery{{Parent: []byte("parent"), DicomWebPath: []byte("dicomWebPath")}}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			p, s, resourcePaths := ptest.CreateList(testReadDicomMetadataQueries)

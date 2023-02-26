@@ -44,8 +44,8 @@ func init() {
 
 /* Read Dicom files Fn*/
 type ReadDicomQuery struct {
-	parent       []byte
-	dicomWebPath []byte
+	Parent       []byte
+	DicomWebPath []byte
 }
 
 type readDicomFn struct {
@@ -62,18 +62,18 @@ func (fn *readDicomFn) Setup() {
 
 func (fn *readDicomFn) ProcessElement(ctx context.Context, query ReadDicomQuery, emitResource, emitDeadLetter func(string)) {
 	response, err := executeAndRecordLatency(ctx, &fn.latencyMs, func() (*http.Response, error) {
-		return fn.client.readStudy(query.parent, query.dicomWebPath)
+		return fn.client.readStudy(query.Parent, query.DicomWebPath)
 	})
 	if err != nil {
 		fn.resourcesErrorCount.Inc(ctx, 1)
-		emitDeadLetter(errors.Wrapf(err, "read resource request returned error on input: [%v, %v]", query.parent, query.dicomWebPath).Error())
+		emitDeadLetter(errors.Wrapf(err, "read resource request returned error on input: [%v, %v]", query.Parent, query.DicomWebPath).Error())
 		return
 	}
 
 	body, err := extractBodyFrom(response)
 	if err != nil {
 		fn.resourcesErrorCount.Inc(ctx, 1)
-		emitDeadLetter(errors.Wrapf(err, "could not extract body from read resource [%v, %v] response", query.parent, query.dicomWebPath).Error())
+		emitDeadLetter(errors.Wrapf(err, "could not extract body from read resource [%v, %v] response", query.Parent, query.DicomWebPath).Error())
 		return
 	}
 
@@ -100,8 +100,8 @@ func readDicom(s beam.Scope, readDicomQueries beam.PCollection, client dicomStor
 
 /* Read Dicom metadata Fn*/
 type ReadDicomMetadataQuery struct {
-	parent       []byte
-	dicomWebPath []byte
+	Parent       []byte
+	DicomWebPath []byte
 }
 type readDicomMetadataFn struct {
 	fnCommonVariables
@@ -117,18 +117,18 @@ func (fn *readDicomMetadataFn) Setup() {
 
 func (fn *readDicomMetadataFn) ProcessElement(ctx context.Context, query ReadDicomMetadataQuery, emitResource, emitDeadLetter func(string)) {
 	response, err := executeAndRecordLatency(ctx, &fn.latencyMs, func() (*http.Response, error) {
-		return fn.client.readStudyMetadata(query.parent, query.dicomWebPath)
+		return fn.client.readStudyMetadata(query.Parent, query.DicomWebPath)
 	})
 	if err != nil {
 		fn.resourcesErrorCount.Inc(ctx, 1)
-		emitDeadLetter(errors.Wrapf(err, "read resource request returned error on input: [%v, %v]", query.parent, query.dicomWebPath).Error())
+		emitDeadLetter(errors.Wrapf(err, "read resource request returned error on input: [%v, %v]", query.Parent, query.DicomWebPath).Error())
 		return
 	}
 
 	body, err := extractBodyFrom(response)
 	if err != nil {
 		fn.resourcesErrorCount.Inc(ctx, 1)
-		emitDeadLetter(errors.Wrapf(err, "could not extract body from read resource [%v, %v] response", query.parent, query.dicomWebPath).Error())
+		emitDeadLetter(errors.Wrapf(err, "could not extract body from read resource [%v, %v] response", query.Parent, query.DicomWebPath).Error())
 		return
 	}
 
