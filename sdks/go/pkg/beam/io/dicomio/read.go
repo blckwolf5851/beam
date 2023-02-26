@@ -20,12 +20,11 @@ package dicomio
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/apache/beam/sdks/v2/go/pkg/beam"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/internal/errors"
-	"github.com/apache/beam/sdks/v2/go/pkg/beam/log"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/register"
 	"golang.org/x/exp/slices"
 )
@@ -75,14 +74,6 @@ func (fn *readDicomFn) ProcessElement(ctx context.Context, parent, dicomWebPath 
 		if !slices.Contains(expectedResourceScopes, fn.readConfig.resourceScope) {
 			fn.readConfig.resourceScope = inferResourceScope(string(dicomWebPath))
 			fn.readConfig.metadataOnly = inferMetadataOnly(string(dicomWebPath))
-			noConfigMsg := fmt.Sprintf(
-				"Read config is not provided for resource (%v%v), [resourceScope, metadataOnly] is inferred to be [%v, %v].",
-				string(parent),
-				string(dicomWebPath),
-				fn.readConfig.resourceScope,
-				fn.readConfig.metadataOnly,
-			)
-			log.Warn(ctx, noConfigMsg)
 		}
 		switch fn.readConfig.resourceScope {
 		case resourceScopeStudies:
@@ -129,7 +120,7 @@ func (fn *readDicomFn) ProcessElement(ctx context.Context, parent, dicomWebPath 
 }
 
 // Read fetches resources from Google Cloud Healthcare DICOM stores based on the
-// resource path KV<[]byte, []byte>. It consumes a PCollection<string> of notifications from the
+// resource path. It consumes a KV<[]byte, []byte> of notifications from the
 // DICOM store of resource paths, and fetches the actual resource object on the
 // path in the notification. It outputs two PCollection<string>. The first
 // contains the fetched object as a JSON-encoded string, and the second is a
@@ -137,6 +128,11 @@ func (fn *readDicomFn) ProcessElement(ctx context.Context, parent, dicomWebPath 
 // See: https://cloud.google.com/healthcare-api/docs/how-tos/dicom-resources#getting_a_dicom_resource.
 func Read(s beam.Scope, cfg readConfig, resourcePaths beam.PCollection) (beam.PCollection, beam.PCollection) {
 	s = s.Scope("dicomio.Read")
+	expectedResourceScopes := []resourceScope{resourceScopeStudies, resourceScopeSeries, resourceScopeInstances}
+	if !slices.Contains(expectedResourceScopes, cfg.resourceScope) {
+		log.Println("Read config is not provided, [resourceScope, metadataOnly] will be inferred.")
+	}
+
 	return read(s, cfg, resourcePaths, nil)
 }
 
