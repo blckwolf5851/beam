@@ -46,6 +46,9 @@ var (
 		fakeImportResources: func(string, string) (operationResults, error) {
 			return operationResults{}, errors.New(fakeRequestReturnErrorMessage)
 		},
+		fakeStoreInstance: func(string, string, []byte) (*http.Response, error) {
+			return nil, errors.New(fakeRequestReturnErrorMessage)
+		},
 	}
 
 	badStatusFakeResponse = &http.Response{
@@ -62,6 +65,9 @@ var (
 		fakeReadStudyMetadata: badStatusReadFunc,
 		fakeReadStudy:         badStatusReadFunc,
 		fakeSearchStudies:     badStatusSearchFunc,
+		fakeStoreInstance: func(string, string, []byte) (*http.Response, error) {
+			return badStatusFakeResponse, nil
+		},
 	}
 
 	fakeBodyReaderErrorMessage  = "ReadAll fail"
@@ -83,6 +89,9 @@ var (
 		fakeReadStudyMetadata: badResponseReadFunc,
 		fakeReadStudy:         badResponseReadFunc,
 		fakeSearchStudies:     badResponseSearchFunc,
+		fakeStoreInstance: func(string, string, []byte) (*http.Response, error) {
+			return bodyReaderErrorFakeResponse, nil
+		},
 	}
 
 	emptyBodyReaderFakeResponse = &http.Response{
@@ -99,6 +108,9 @@ var (
 		fakeReadStudyMetadata: emptyResponseReadFunc,
 		fakeReadStudy:         emptyResponseReadFunc,
 		fakeSearchStudies:     emptyResponseSearchFunc,
+		fakeStoreInstance: func(string, string, []byte) (*http.Response, error) {
+			return emptyBodyReaderFakeResponse, nil
+		},
 	}
 )
 
@@ -108,6 +120,7 @@ type fakeDicomStoreClient struct {
 	fakeSearchStudies     func(string, string, map[string]string) (*http.Response, error)
 	fakeDeidentify        func(string, string, *healthcare.DeidentifyConfig) (operationResults, error)
 	fakeImportResources   func(string, string) (operationResults, error)
+	fakeStoreInstance     func(string, string, []byte) (*http.Response, error)
 }
 
 func (c *fakeDicomStoreClient) readStudyMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
@@ -127,6 +140,10 @@ func (c *fakeDicomStoreClient) deidentify(srcStorePath, dstStorePath string, dei
 
 func (c *fakeDicomStoreClient) importResources(storePath, gcsURI string) (operationResults, error) {
 	return c.fakeImportResources(storePath, gcsURI)
+}
+
+func (c *fakeDicomStoreClient) storeInstance(parent, dicomWebPath string, dicomData []byte) (*http.Response, error) {
+	return c.fakeStoreInstance(parent, dicomWebPath, dicomData)
 }
 
 // Useful to fake the Body of a http.Response.

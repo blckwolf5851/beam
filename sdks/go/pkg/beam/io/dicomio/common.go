@@ -87,6 +87,7 @@ type dicomStoreClient interface {
 	searchStudies(parent, dicomWebPath string, queries map[string]string) (*http.Response, error)
 	deidentify(srcStorePath, dstStorePath string, deidConfig *healthcare.DeidentifyConfig) (operationResults, error)
 	importResources(storePath, gcsURI string) (operationResults, error)
+	storeInstance(parent, dicomWebPath string, dicomData []byte) (*http.Response, error)
 }
 
 type dicomStoreClientImpl struct {
@@ -165,6 +166,12 @@ func (c *dicomStoreClientImpl) importResources(storePath, gcsURI string) (operat
 		return operationResults{}, err
 	}
 	return c.pollTilCompleteAndCollectResults(operation)
+}
+
+func (c *dicomStoreClientImpl) storeInstance(parent, dicomWebPath string, dicomData []byte) (*http.Response, error) {
+	call := c.dicomStoreService().StoreInstances(parent, dicomWebPath, bytes.NewReader(dicomData))
+	call.Header().Set("Content-Type", "application/dicom")
+	return call.Do()
 }
 
 func (c *dicomStoreClientImpl) pollTilCompleteAndCollectResults(operation *healthcare.Operation) (operationResults, error) {
