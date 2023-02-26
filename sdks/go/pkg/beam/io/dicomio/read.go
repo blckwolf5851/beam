@@ -48,13 +48,6 @@ func init() {
 	register.Emitter1[string]()
 }
 
-/*
-****************************************
-
-	Read DICOM study metadata Fn
-
-*****************************************
-*/
 type readDicomFn struct {
 	readConfig
 	fnCommonVariables
