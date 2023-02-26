@@ -25,45 +25,79 @@ import (
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/testing/ptest"
 )
 
-func TestRead(t *testing.T) {
+func TestReadDicom(t *testing.T) {
 	testCases := []struct {
 		name           string
-		config         readConfig
 		client         dicomStoreClient
 		containedError string
 	}{
 		{
 			name:           "Read request returns error",
-			config:         readstudiesConfig,
 			client:         requestReturnErrorFakeClient,
 			containedError: fakeRequestReturnErrorMessage,
 		},
 		{
 			name:           "Read request returns bad status",
-			config:         readstudiesMetadataConfig,
 			client:         badStatusFakeClient,
 			containedError: strconv.Itoa(http.StatusForbidden),
 		},
 		{
 			name:           "Read request response body fails to be read",
-			config:         readinstancesMetadataConfig,
 			client:         bodyReaderErrorFakeClient,
 			containedError: fakeBodyReaderErrorMessage,
 		},
 	}
-
-	testResourcePaths := [][]byte{[]byte("foo"), []byte("bar")}
+	testReadDicomQueries := []ReadDicomQuery{ReadDicomQuery{parent: []byte("parent"), dicomWebPath: []byte("dicomWebPath"), resourceScope: ResourceScopeStudies}}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			p, s, resourcePaths := ptest.CreateList(testResourcePaths)
-			resources, failedReads := read(s, testCase.config, resourcePaths, testCase.client)
+			p, s, resourcePaths := ptest.CreateList(testReadDicomQueries)
+			resources, failedReads := readDicom(s, resourcePaths, testCase.client)
 			passert.Empty(s, resources)
-			passert.Count(s, failedReads, "", len(testResourcePaths))
+			passert.Count(s, failedReads, "", len(testReadDicomQueries))
 			passert.True(s, failedReads, func(errorMsg string) bool {
 				return strings.Contains(errorMsg, testCase.containedError)
 			})
 			pipelineResult := ptest.RunAndValidate(t, p)
-			validateCounter(t, pipelineResult, errorCounterName, len(testResourcePaths))
+			validateCounter(t, pipelineResult, errorCounterName, len(testReadDicomQueries))
+			validateCounter(t, pipelineResult, successCounterName, 0)
+		})
+	}
+}
+
+func TestReadDicomMetadata(t *testing.T) {
+	testCases := []struct {
+		name           string
+		client         dicomStoreClient
+		containedError string
+	}{
+		{
+			name:           "Read request returns error",
+			client:         requestReturnErrorFakeClient,
+			containedError: fakeRequestReturnErrorMessage,
+		},
+		{
+			name:           "Read request returns bad status",
+			client:         badStatusFakeClient,
+			containedError: strconv.Itoa(http.StatusForbidden),
+		},
+		{
+			name:           "Read request response body fails to be read",
+			client:         bodyReaderErrorFakeClient,
+			containedError: fakeBodyReaderErrorMessage,
+		},
+	}
+	testReadDicomMetadataQueries := []ReadDicomMetadataQuery{ReadDicomMetadataQuery{parent: []byte("parent"), dicomWebPath: []byte("dicomWebPath"), resourceScope: ResourceScopeStudies}}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			p, s, resourcePaths := ptest.CreateList(testReadDicomMetadataQueries)
+			resources, failedReads := readDicomMetadata(s, resourcePaths, testCase.client)
+			passert.Empty(s, resources)
+			passert.Count(s, failedReads, "", len(testReadDicomMetadataQueries))
+			passert.True(s, failedReads, func(errorMsg string) bool {
+				return strings.Contains(errorMsg, testCase.containedError)
+			})
+			pipelineResult := ptest.RunAndValidate(t, p)
+			validateCounter(t, pipelineResult, errorCounterName, len(testReadDicomMetadataQueries))
 			validateCounter(t, pipelineResult, successCounterName, 0)
 		})
 	}

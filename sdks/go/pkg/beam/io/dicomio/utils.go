@@ -4,16 +4,16 @@ import (
 	"strings"
 )
 
-func inferResourceScope(dicomWebPath string) resourceScope {
-	scope := resourceScopeNone
+func inferResourceScope(dicomWebPath string) ResourceScope {
+	scope := ResourceScopeNone
 	if strings.Contains(dicomWebPath, "/studies/") {
-		scope = resourceScopeStudies
+		scope = ResourceScopeStudies
 	}
 	if strings.Contains(dicomWebPath, "/series/") {
-		scope = resourceScopeSeries
+		scope = ResourceScopeSeries
 	}
 	if strings.Contains(dicomWebPath, "/instances/") {
-		scope = resourceScopeInstances
+		scope = ResourceScopeInstances
 	}
 	return scope
 }

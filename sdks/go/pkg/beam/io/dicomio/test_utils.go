@@ -29,42 +29,23 @@ import (
 var (
 	testOperationResult = operationResults{Successes: 5, Failures: 2}
 
-	readstudiesConfig           = readConfig{resourceScope: resourceScopeStudies, metadataOnly: false}
-	readseriesConfig            = readConfig{resourceScope: resourceScopeSeries, metadataOnly: false}
-	readinstancesConfig         = readConfig{resourceScope: resourceScopeInstances, metadataOnly: false}
-	readstudiesMetadataConfig   = readConfig{resourceScope: resourceScopeStudies, metadataOnly: true}
-	readseriesMetadataConfig    = readConfig{resourceScope: resourceScopeSeries, metadataOnly: true}
-	readinstancesMetadataConfig = readConfig{resourceScope: resourceScopeInstances, metadataOnly: true}
-
 	fakeRequestReturnErrorMessage = "internal error"
-	requestReturnErrorFakeClient  = &fakeDicomStoreClient{
-		fakeReadStudiesMetadata: func([]byte, []byte) (*http.Response, error) {
-			return nil, errors.New(fakeRequestReturnErrorMessage)
-		},
-		fakeReadSeriesMetadata: func([]byte, []byte) (*http.Response, error) {
-			return nil, errors.New(fakeRequestReturnErrorMessage)
-		},
-		fakeReadInstancesMetadata: func([]byte, []byte) (*http.Response, error) {
-			return nil, errors.New(fakeRequestReturnErrorMessage)
-		},
-		fakeReadStudy: func([]byte, []byte) (*http.Response, error) {
-			return nil, errors.New(fakeRequestReturnErrorMessage)
-		},
-		fakeReadSeries: func([]byte, []byte) (*http.Response, error) {
-			return nil, errors.New(fakeRequestReturnErrorMessage)
-		},
-		fakeReadInstance: func([]byte, []byte) (*http.Response, error) {
-			return nil, errors.New(fakeRequestReturnErrorMessage)
-		},
-		fakeSearchStudies: func(string, string, map[string]string) (*http.Response, error) {
-			return nil, errors.New(fakeRequestReturnErrorMessage)
-		},
-		fakeSearchSeries: func(string, string, map[string]string) (*http.Response, error) {
-			return nil, errors.New(fakeRequestReturnErrorMessage)
-		},
-		fakeSearchInstances: func(string, string, map[string]string) (*http.Response, error) {
-			return nil, errors.New(fakeRequestReturnErrorMessage)
-		},
+	errorReadFunc                 = func([]byte, []byte) (*http.Response, error) {
+		return nil, errors.New(fakeRequestReturnErrorMessage)
+	}
+	errorSearchFunc = func(string, string, map[string]string) (*http.Response, error) {
+		return nil, errors.New(fakeRequestReturnErrorMessage)
+	}
+	requestReturnErrorFakeClient = &fakeDicomStoreClient{
+		fakeReadStudyMetadata:    errorReadFunc,
+		fakeReadSeriesMetadata:   errorReadFunc,
+		fakeReadInstanceMetadata: errorReadFunc,
+		fakeReadStudy:            errorReadFunc,
+		fakeReadSeries:           errorReadFunc,
+		fakeReadInstance:         errorReadFunc,
+		fakeSearchStudies:        errorSearchFunc,
+		fakeSearchSeries:         errorSearchFunc,
+		fakeSearchInstances:      errorSearchFunc,
 		fakeDeidentify: func(string, string, *healthcare.DeidentifyConfig) (operationResults, error) {
 			return operationResults{}, errors.New(fakeRequestReturnErrorMessage)
 		},
@@ -84,15 +65,15 @@ var (
 		return badStatusFakeResponse, nil
 	}
 	badStatusFakeClient = &fakeDicomStoreClient{
-		fakeReadStudiesMetadata:   badStatusReadFunc,
-		fakeReadSeriesMetadata:    badStatusReadFunc,
-		fakeReadInstancesMetadata: badStatusReadFunc,
-		fakeReadStudy:             badStatusReadFunc,
-		fakeReadSeries:            badStatusReadFunc,
-		fakeReadInstance:          badStatusReadFunc,
-		fakeSearchStudies:         badStatusSearchFunc,
-		fakeSearchSeries:          badStatusSearchFunc,
-		fakeSearchInstances:       badStatusSearchFunc,
+		fakeReadStudyMetadata:    badStatusReadFunc,
+		fakeReadSeriesMetadata:   badStatusReadFunc,
+		fakeReadInstanceMetadata: badStatusReadFunc,
+		fakeReadStudy:            badStatusReadFunc,
+		fakeReadSeries:           badStatusReadFunc,
+		fakeReadInstance:         badStatusReadFunc,
+		fakeSearchStudies:        badStatusSearchFunc,
+		fakeSearchSeries:         badStatusSearchFunc,
+		fakeSearchInstances:      badStatusSearchFunc,
 	}
 
 	fakeBodyReaderErrorMessage  = "ReadAll fail"
@@ -111,15 +92,15 @@ var (
 		return bodyReaderErrorFakeResponse, nil
 	}
 	bodyReaderErrorFakeClient = &fakeDicomStoreClient{
-		fakeReadStudiesMetadata:   badResponseReadFunc,
-		fakeReadSeriesMetadata:    badResponseReadFunc,
-		fakeReadInstancesMetadata: badResponseReadFunc,
-		fakeReadStudy:             badResponseReadFunc,
-		fakeReadSeries:            badResponseReadFunc,
-		fakeReadInstance:          badResponseReadFunc,
-		fakeSearchStudies:         badResponseSearchFunc,
-		fakeSearchSeries:          badResponseSearchFunc,
-		fakeSearchInstances:       badResponseSearchFunc,
+		fakeReadStudyMetadata:    badResponseReadFunc,
+		fakeReadSeriesMetadata:   badResponseReadFunc,
+		fakeReadInstanceMetadata: badResponseReadFunc,
+		fakeReadStudy:            badResponseReadFunc,
+		fakeReadSeries:           badResponseReadFunc,
+		fakeReadInstance:         badResponseReadFunc,
+		fakeSearchStudies:        badResponseSearchFunc,
+		fakeSearchSeries:         badResponseSearchFunc,
+		fakeSearchInstances:      badResponseSearchFunc,
 	}
 
 	emptyBodyReaderFakeResponse = &http.Response{
@@ -133,40 +114,40 @@ var (
 		return emptyBodyReaderFakeResponse, nil
 	}
 	emptyResponseBodyFakeClient = &fakeDicomStoreClient{
-		fakeReadStudiesMetadata:   emptyResponseReadFunc,
-		fakeReadSeriesMetadata:    emptyResponseReadFunc,
-		fakeReadInstancesMetadata: emptyResponseReadFunc,
-		fakeReadStudy:             emptyResponseReadFunc,
-		fakeReadSeries:            emptyResponseReadFunc,
-		fakeReadInstance:          emptyResponseReadFunc,
-		fakeSearchStudies:         emptyResponseSearchFunc,
-		fakeSearchSeries:          emptyResponseSearchFunc,
-		fakeSearchInstances:       emptyResponseSearchFunc,
+		fakeReadStudyMetadata:    emptyResponseReadFunc,
+		fakeReadSeriesMetadata:   emptyResponseReadFunc,
+		fakeReadInstanceMetadata: emptyResponseReadFunc,
+		fakeReadStudy:            emptyResponseReadFunc,
+		fakeReadSeries:           emptyResponseReadFunc,
+		fakeReadInstance:         emptyResponseReadFunc,
+		fakeSearchStudies:        emptyResponseSearchFunc,
+		fakeSearchSeries:         emptyResponseSearchFunc,
+		fakeSearchInstances:      emptyResponseSearchFunc,
 	}
 )
 
 type fakeDicomStoreClient struct {
-	fakeReadStudiesMetadata   func([]byte, []byte) (*http.Response, error)
-	fakeReadSeriesMetadata    func([]byte, []byte) (*http.Response, error)
-	fakeReadInstancesMetadata func([]byte, []byte) (*http.Response, error)
-	fakeReadStudy             func([]byte, []byte) (*http.Response, error)
-	fakeReadSeries            func([]byte, []byte) (*http.Response, error)
-	fakeReadInstance          func([]byte, []byte) (*http.Response, error)
-	fakeSearchStudies         func(string, string, map[string]string) (*http.Response, error)
-	fakeSearchSeries          func(string, string, map[string]string) (*http.Response, error)
-	fakeSearchInstances       func(string, string, map[string]string) (*http.Response, error)
-	fakeDeidentify            func(string, string, *healthcare.DeidentifyConfig) (operationResults, error)
-	fakeImportResources       func(string, string) (operationResults, error)
+	fakeReadStudyMetadata    func([]byte, []byte) (*http.Response, error)
+	fakeReadSeriesMetadata   func([]byte, []byte) (*http.Response, error)
+	fakeReadInstanceMetadata func([]byte, []byte) (*http.Response, error)
+	fakeReadStudy            func([]byte, []byte) (*http.Response, error)
+	fakeReadSeries           func([]byte, []byte) (*http.Response, error)
+	fakeReadInstance         func([]byte, []byte) (*http.Response, error)
+	fakeSearchStudies        func(string, string, map[string]string) (*http.Response, error)
+	fakeSearchSeries         func(string, string, map[string]string) (*http.Response, error)
+	fakeSearchInstances      func(string, string, map[string]string) (*http.Response, error)
+	fakeDeidentify           func(string, string, *healthcare.DeidentifyConfig) (operationResults, error)
+	fakeImportResources      func(string, string) (operationResults, error)
 }
 
-func (c *fakeDicomStoreClient) readStudiesMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
-	return c.fakeReadStudiesMetadata(parent, dicomWebPath)
+func (c *fakeDicomStoreClient) readStudyMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
+	return c.fakeReadStudyMetadata(parent, dicomWebPath)
 }
 func (c *fakeDicomStoreClient) readSeriesMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
 	return c.fakeReadSeriesMetadata(parent, dicomWebPath)
 }
-func (c *fakeDicomStoreClient) readInstancesMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
-	return c.fakeReadInstancesMetadata(parent, dicomWebPath)
+func (c *fakeDicomStoreClient) readInstanceMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
+	return c.fakeReadInstanceMetadata(parent, dicomWebPath)
 }
 func (c *fakeDicomStoreClient) readStudy(parent, dicomWebPath []byte) (*http.Response, error) {
 	return c.fakeReadStudy(parent, dicomWebPath)

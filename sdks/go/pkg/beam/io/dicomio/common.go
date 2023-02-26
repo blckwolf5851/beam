@@ -82,9 +82,9 @@ type operationResults struct {
 }
 
 type dicomStoreClient interface {
-	readStudiesMetadata(parent, dicomWebPath []byte) (*http.Response, error)
+	readStudyMetadata(parent, dicomWebPath []byte) (*http.Response, error)
 	readSeriesMetadata(parent, dicomWebPath []byte) (*http.Response, error)
-	readInstancesMetadata(parent, dicomWebPath []byte) (*http.Response, error)
+	readInstanceMetadata(parent, dicomWebPath []byte) (*http.Response, error)
 	readStudy(parent, dicomWebPath []byte) (*http.Response, error)
 	readSeries(parent, dicomWebPath []byte) (*http.Response, error)
 	readInstance(parent, dicomWebPath []byte) (*http.Response, error)
@@ -116,7 +116,7 @@ func (c *dicomStoreClientImpl) dicomStoreService() *healthcare.ProjectsLocations
 // Returns instance associated with the given study presented as metadata with the bulk data removed.
 //   - parent: projects/{project_id}/locations/{location_id}/datasets/{dataset_id}/dicomStores/{dicom_store_id}
 //   - dicomWebPath: /studies/{study_uid}/metadata
-func (c *dicomStoreClientImpl) readStudiesMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
+func (c *dicomStoreClientImpl) readStudyMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
 	return c.dicomStoreService().Studies.RetrieveMetadata(string(parent), string(dicomWebPath)).Do()
 }
 
@@ -130,7 +130,7 @@ func (c *dicomStoreClientImpl) readSeriesMetadata(parent, dicomWebPath []byte) (
 // Returns instance associated with the given study&serie&instances presented as metadata with the bulk data removed.
 //   - parent: projects/{project_id}/locations/{location_id}/datasets/{dataset_id}/dicomStores/{dicom_store_id}
 //   - dicomWebPath: studies/{study_uid}/series/{series_uid}/instances/{instance_uid}/metadata
-func (c *dicomStoreClientImpl) readInstancesMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
+func (c *dicomStoreClientImpl) readInstanceMetadata(parent, dicomWebPath []byte) (*http.Response, error) {
 	return c.dicomStoreService().Studies.Series.Instances.RetrieveMetadata(string(parent), string(dicomWebPath)).Do()
 }
 
